@@ -88,17 +88,32 @@ export default function App() {
   const [routeInfo, setRouteInfo] = useState(null);
   const [encodedPolyline, setEncodedPolyline] = useState('');
 
-  // Target city coordinates (San Francisco)
-  const defaultCenter = { lat: 37.7749, lng: -122.4194 };
+  // Target city coordinates (Tarkwa, Ghana)
+  const defaultCenter = { lat: 5.3018, lng: -1.9930 };
+  const [originLatLng, setOriginLatLng] = useState(defaultCenter);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
   useEffect(() => {
-    // Simulate auto-locating
-    const timer = setTimeout(() => {
-      setCurrentLocation('123 Main St, Transit Hub (Current)');
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setOriginLatLng({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          setCurrentLocation('Detected GPS Location');
+          setIsLocating(false);
+        },
+        (error) => {
+          console.warn("Geolocation failed", error);
+          setCurrentLocation('Location access denied (Using Tarkwa)');
+          setIsLocating(false);
+        }
+      );
+    } else {
+      setCurrentLocation('Geolocation not supported');
       setIsLocating(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    }
   }, []);
 
   const parseDuration = (durationStr) => {
@@ -143,8 +158,7 @@ export default function App() {
         lng: geocodeResult.lng()
       };
 
-      // In a real app, originLatLng would be dynamic.
-      const originLatLng = defaultCenter; 
+      // Origin is now dynamically using HTML5 Geolocation state (originLatLng)
 
       // 2. Fetch the route from our backend
       const response = await fetch('/api/route', {
