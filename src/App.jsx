@@ -210,10 +210,10 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full w-full bg-background overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[100dvh] w-full bg-background overflow-hidden">
       
       {/* Input Panel */}
-      <div className="w-full lg:w-96 lg:min-w-[24rem] h-auto lg:h-full flex flex-col bg-secondary border-b lg:border-b-0 lg:border-r border-border shadow-2xl z-10 shrink-0">
+      <div className="w-full lg:w-96 lg:min-w-[24rem] h-[50dvh] lg:h-full flex flex-col bg-secondary border-b lg:border-b-0 lg:border-r border-border shadow-2xl z-10 shrink-0">
         
         {/* Header */}
         <div className="p-4 bg-primary text-on-primary flex items-center justify-between shadow-md">
@@ -233,8 +233,8 @@ export default function App() {
         </div>
 
         {/* Routing Form */}
-        <div className="p-5 flex-grow flex flex-col space-y-6 overflow-y-auto">
-          <form onSubmit={handleRouteSearch} className="space-y-5">
+        <div className="p-4 lg:p-5 flex-grow flex flex-col space-y-4 lg:space-y-6 overflow-y-auto">
+          <form onSubmit={handleRouteSearch} className="space-y-4 lg:space-y-5 shrink-0">
             
             {/* Current Location */}
             <div className="space-y-2">
@@ -294,7 +294,7 @@ export default function App() {
           </form>
 
           {/* Quick Actions / Info */}
-          <div className="mt-8 bg-muted border border-border rounded-lg p-4 flex flex-col space-y-4">
+          <div className="mt-2 lg:mt-8 bg-muted border border-border rounded-lg p-3 lg:p-4 flex flex-col space-y-3 lg:space-y-4 shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider flex items-center space-x-2">
                 <AlertCircle size={16} />
@@ -341,7 +341,7 @@ export default function App() {
         
         {/* Floating Route Dashboard Card */}
         {routeAlternatives && routeAlternatives.length > 0 && (
-          <div className="absolute top-4 left-4 lg:left-8 z-10 bg-secondary/95 backdrop-blur-md border border-accent/50 p-4 rounded-xl shadow-2xl min-w-[300px] animate-in slide-in-from-top-4 fade-in duration-300 max-h-[80vh] flex flex-col">
+          <div className="absolute top-2 left-2 right-2 lg:top-4 lg:left-8 lg:right-auto z-10 bg-secondary/95 backdrop-blur-md border border-accent/50 p-3 lg:p-4 rounded-xl shadow-2xl lg:min-w-[320px] animate-in slide-in-from-top-2 fade-in duration-300 max-h-[45dvh] lg:max-h-[80dvh] flex flex-col">
             <h3 className="text-foreground font-bold mb-3 flex items-center space-x-2 shrink-0">
               <RouteIcon className="text-accent" size={18} />
               <span>Available Routes</span>
