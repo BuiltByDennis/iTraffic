@@ -147,7 +147,7 @@ export default function App() {
       const originLatLng = defaultCenter; 
 
       // 2. Fetch the route from our backend
-      const response = await fetch('http://localhost:8000/api/route', {
+      const response = await fetch('/api/route', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
