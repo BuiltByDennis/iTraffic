@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #0F172A;
+    --color-on-primary: #FFFFFF;
+    --color-secondary: #1E293B;
+    --color-accent: #22C55E;
+    --color-background: #020617;
+    --color-foreground: #F8FAFC;
+    --color-muted: #1A1E2F;
+    --color-border: #334155;
+    --color-destructive: #EF4444;
+    --color-ring: #0F172A;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus:outline-none focus:ring-4 focus:ring-accent focus:ring-opacity-50 transition-shadow duration-200;
+  }
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Mobile app feel */
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
