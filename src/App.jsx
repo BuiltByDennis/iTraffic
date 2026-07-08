@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Navigation, Map as MapIcon, Search, AlertCircle, Crosshair, Clock, Route as RouteIcon, Loader2 } from 'lucide-react';
-import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, useMap, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 // Component to handle the Traffic Layer
 const TrafficLayerHandler = ({ showTraffic }) => {
@@ -91,25 +91,32 @@ export default function App() {
   // Target city coordinates (Tarkwa, Ghana)
   const defaultCenter = { lat: 5.3018, lng: -1.9930 };
   const [originLatLng, setOriginLatLng] = useState(defaultCenter);
+  const [busPosition, setBusPosition] = useState(null);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
   useEffect(() => {
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
+      const watchId = navigator.geolocation.watchPosition(
         (position) => {
-          setOriginLatLng({
+          const newPos = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
+          };
+          setOriginLatLng(newPos);
+          setBusPosition(newPos);
+          setIsLocating((prev) => {
+            if (prev) setCurrentLocation('Live GPS Active');
+            return false;
           });
-          setCurrentLocation('Detected GPS Location');
-          setIsLocating(false);
         },
         (error) => {
           console.warn("Geolocation failed", error);
           setCurrentLocation('Location access denied (Using Tarkwa)');
           setIsLocating(false);
-        }
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
       );
+      return () => navigator.geolocation.clearWatch(watchId);
     } else {
       setCurrentLocation('Geolocation not supported');
       setIsLocating(false);
@@ -129,6 +136,14 @@ export default function App() {
     if (!meters) return 'N/A';
     const km = meters / 1000;
     return `${km.toFixed(1)} km`;
+  };
+
+  const calculateDelay = (durationStr, staticDurationStr) => {
+    if (!durationStr || !staticDurationStr) return '0m';
+    const durSec = parseInt(durationStr.replace('s', ''), 10);
+    const staticSec = parseInt(staticDurationStr.replace('s', ''), 10);
+    const delayMins = Math.round(Math.max(0, durSec - staticSec) / 60);
+    return `${delayMins}m`;
   };
 
   const handleRouteSearch = async (e) => {
@@ -183,6 +198,7 @@ export default function App() {
       setEncodedPolyline(data.encodedPolyline);
       setRouteInfo({
         duration: data.duration,
+        staticDuration: data.staticDuration,
         distanceMeters: data.distanceMeters
       });
 
@@ -306,12 +322,15 @@ export default function App() {
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-background rounded-md p-3 border border-border">
-                <div className="text-foreground/50 mb-1">Traffic Delay</div>
-                <div className="font-mono text-accent font-semibold flex items-center"><span className="mr-1 text-lg">↓</span> 12%</div>
+                <div className="text-foreground/50 mb-1">Route Delay</div>
+                <div className={`font-mono font-semibold flex items-center ${routeInfo && calculateDelay(routeInfo.duration, routeInfo.staticDuration) !== '0m' ? 'text-destructive' : 'text-accent'}`}>
+                  <span className="mr-1 text-lg">{routeInfo && calculateDelay(routeInfo.duration, routeInfo.staticDuration) !== '0m' ? '↑' : '↓'}</span> 
+                  {routeInfo ? calculateDelay(routeInfo.duration, routeInfo.staticDuration) : '0m'}
+                </div>
               </div>
               <div className="bg-background rounded-md p-3 border border-border">
-                <div className="text-foreground/50 mb-1">Active Incidents</div>
-                <div className="font-mono text-destructive font-semibold">3 Reported</div>
+                <div className="text-foreground/50 mb-1">Algorithm</div>
+                <div className="font-mono text-accent font-semibold">Shortest Path</div>
               </div>
             </div>
           </div>
@@ -363,6 +382,11 @@ export default function App() {
           >
             <TrafficLayerHandler showTraffic={showTraffic} />
             <PolylineHandler encodedPolyline={encodedPolyline} />
+            {busPosition && (
+              <AdvancedMarker position={busPosition}>
+                <div className="text-4xl filter drop-shadow-md transition-transform duration-1000 ease-linear">🚌</div>
+              </AdvancedMarker>
+            )}
           </Map>
         </APIProvider>
 

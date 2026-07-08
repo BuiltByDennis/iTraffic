@@ -43,7 +43,7 @@ async def get_route(req: RouteRequest):
         "Content-Type": "application/json",
         "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
         # Restrict the response to exactly what we need to minimize latency
-        "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline"
+        "X-Goog-FieldMask": "routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline"
     }
     
     payload = {
@@ -81,6 +81,7 @@ async def get_route(req: RouteRequest):
             
             return {
                 "duration": route.get("duration"),
+                "staticDuration": route.get("staticDuration"),
                 "distanceMeters": route.get("distanceMeters"),
                 "encodedPolyline": route.get("polyline", {}).get("encodedPolyline")
             }
