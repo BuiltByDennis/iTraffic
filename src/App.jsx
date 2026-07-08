@@ -85,8 +85,11 @@ export default function App() {
   // Routing State
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [routeInfo, setRouteInfo] = useState(null);
-  const [encodedPolyline, setEncodedPolyline] = useState('');
+  const [routeAlternatives, setRouteAlternatives] = useState(null);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+
+  const currentRoute = routeAlternatives ? routeAlternatives[selectedRouteIndex] : null;
+  const encodedPolyline = currentRoute ? currentRoute.encodedPolyline : '';
 
   // Target city coordinates (Tarkwa, Ghana)
   const defaultCenter = { lat: 5.3018, lng: -1.9930 };
@@ -152,8 +155,8 @@ export default function App() {
 
     setIsSearching(true);
     setSearchError('');
-    setRouteInfo(null);
-    setEncodedPolyline('');
+    setRouteAlternatives(null);
+    setSelectedRouteIndex(0);
 
     try {
       // 1. Geocode the text destination
@@ -195,12 +198,8 @@ export default function App() {
       const data = await response.json();
       
       // 3. Update state to trigger drawing & UI
-      setEncodedPolyline(data.encodedPolyline);
-      setRouteInfo({
-        duration: data.duration,
-        staticDuration: data.staticDuration,
-        distanceMeters: data.distanceMeters
-      });
+      setRouteAlternatives(data.routes);
+      setSelectedRouteIndex(0);
 
     } catch (err) {
       console.error(err);
@@ -323,9 +322,9 @@ export default function App() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-background rounded-md p-3 border border-border">
                 <div className="text-foreground/50 mb-1">Route Delay</div>
-                <div className={`font-mono font-semibold flex items-center ${routeInfo && calculateDelay(routeInfo.duration, routeInfo.staticDuration) !== '0m' ? 'text-destructive' : 'text-accent'}`}>
-                  <span className="mr-1 text-lg">{routeInfo && calculateDelay(routeInfo.duration, routeInfo.staticDuration) !== '0m' ? '↑' : '↓'}</span> 
-                  {routeInfo ? calculateDelay(routeInfo.duration, routeInfo.staticDuration) : '0m'}
+                <div className={`font-mono font-semibold flex items-center ${currentRoute && calculateDelay(currentRoute.duration, currentRoute.staticDuration) !== '0m' ? 'text-destructive' : 'text-accent'}`}>
+                  <span className="mr-1 text-lg">{currentRoute && calculateDelay(currentRoute.duration, currentRoute.staticDuration) !== '0m' ? '↑' : '↓'}</span> 
+                  {currentRoute ? calculateDelay(currentRoute.duration, currentRoute.staticDuration) : '0m'}
                 </div>
               </div>
               <div className="bg-background rounded-md p-3 border border-border">
@@ -341,31 +340,41 @@ export default function App() {
       <div className="flex-grow bg-[#0f172a] relative overflow-hidden">
         
         {/* Floating Route Dashboard Card */}
-        {routeInfo && (
-          <div className="absolute top-4 left-4 lg:left-8 z-10 bg-secondary/95 backdrop-blur-md border border-accent/50 p-4 rounded-xl shadow-2xl min-w-[250px] animate-in slide-in-from-top-4 fade-in duration-300">
-            <h3 className="text-foreground font-bold mb-3 flex items-center space-x-2">
+        {routeAlternatives && routeAlternatives.length > 0 && (
+          <div className="absolute top-4 left-4 lg:left-8 z-10 bg-secondary/95 backdrop-blur-md border border-accent/50 p-4 rounded-xl shadow-2xl min-w-[300px] animate-in slide-in-from-top-4 fade-in duration-300 max-h-[80vh] flex flex-col">
+            <h3 className="text-foreground font-bold mb-3 flex items-center space-x-2 shrink-0">
               <RouteIcon className="text-accent" size={18} />
-              <span>Optimal Route</span>
+              <span>Available Routes</span>
             </h3>
-            <div className="space-y-4 mt-2">
-              <div className="flex items-center space-x-3 text-foreground/80">
-                <div className="bg-blue-500/20 p-2 rounded-lg">
-                  <Clock className="text-blue-400" size={24} />
-                </div>
-                <div>
-                  <div className="text-xs text-foreground/50 uppercase tracking-wider">Est. Travel Time</div>
-                  <div className="font-mono font-bold text-2xl text-foreground">{parseDuration(routeInfo.duration)}</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 text-foreground/80">
-                <div className="bg-accent/20 p-2 rounded-lg">
-                  <Navigation className="text-accent" size={24} />
-                </div>
-                <div>
-                  <div className="text-xs text-foreground/50 uppercase tracking-wider">Distance</div>
-                  <div className="font-mono font-bold text-xl text-foreground">{parseDistance(routeInfo.distanceMeters)}</div>
-                </div>
-              </div>
+            <div className="space-y-3 mt-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full pb-2">
+              {routeAlternatives.map((route, index) => {
+                const isSelected = selectedRouteIndex === index;
+                const delay = calculateDelay(route.duration, route.staticDuration);
+                return (
+                  <div 
+                    key={index}
+                    onClick={() => setSelectedRouteIndex(index)}
+                    className={`cursor-pointer border p-3 rounded-lg transition-all ${isSelected ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(34,197,94,0.15)]' : 'border-border bg-background hover:border-accent/50'}`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="font-bold text-foreground">Route {index + 1} {index === 0 && <span className="text-xs ml-2 bg-accent/20 text-accent px-2 py-0.5 rounded-full">Fastest</span>}</div>
+                      <div className="text-xs text-foreground/50">{parseDistance(route.distanceMeters)}</div>
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center space-x-1">
+                        <Clock size={14} className={isSelected ? "text-accent" : "text-foreground/50"} />
+                        <span className="font-mono">{parseDuration(route.duration)}</span>
+                      </div>
+                      {delay !== '0m' && (
+                        <div className="flex items-center space-x-1 text-destructive">
+                          <AlertCircle size={14} />
+                          <span>+{delay} traffic</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

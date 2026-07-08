@@ -65,7 +65,7 @@ async def get_route(req: RouteRequest):
         },
         "travelMode": "DRIVE",
         "routingPreference": "TRAFFIC_AWARE_OPTIMAL",
-        "computeAlternativeRoutes": False
+        "computeAlternativeRoutes": True
     }
     
     async with httpx.AsyncClient() as client:
@@ -77,13 +77,15 @@ async def get_route(req: RouteRequest):
             if "routes" not in data or len(data["routes"]) == 0:
                 raise HTTPException(status_code=404, detail="No route found between these locations.")
                 
-            route = data["routes"][0]
-            
             return {
-                "duration": route.get("duration"),
-                "staticDuration": route.get("staticDuration"),
-                "distanceMeters": route.get("distanceMeters"),
-                "encodedPolyline": route.get("polyline", {}).get("encodedPolyline")
+                "routes": [
+                    {
+                        "duration": r.get("duration"),
+                        "staticDuration": r.get("staticDuration"),
+                        "distanceMeters": r.get("distanceMeters"),
+                        "encodedPolyline": r.get("polyline", {}).get("encodedPolyline")
+                    } for r in data["routes"]
+                ]
             }
             
         except httpx.HTTPStatusError as exc:
