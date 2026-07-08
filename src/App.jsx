@@ -87,6 +87,7 @@ export default function App() {
   const [searchError, setSearchError] = useState('');
   const [routeAlternatives, setRouteAlternatives] = useState(null);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const currentRoute = routeAlternatives ? routeAlternatives[selectedRouteIndex] : null;
   const encodedPolyline = currentRoute ? currentRoute.encodedPolyline : '';
@@ -157,6 +158,7 @@ export default function App() {
     setSearchError('');
     setRouteAlternatives(null);
     setSelectedRouteIndex(0);
+    setIsNavigating(false);
 
     try {
       // 1. Geocode the text destination
@@ -213,7 +215,7 @@ export default function App() {
     <div className="flex flex-col lg:flex-row h-[100dvh] w-full bg-background overflow-hidden">
       
       {/* Input Panel */}
-      <div className="w-full lg:w-96 lg:min-w-[24rem] h-[50dvh] lg:h-full flex flex-col bg-secondary border-b lg:border-b-0 lg:border-r border-border shadow-2xl z-10 shrink-0">
+      <div className={`w-full lg:w-96 lg:min-w-[24rem] h-[50dvh] lg:h-full flex flex-col bg-secondary border-b lg:border-b-0 lg:border-r border-border shadow-2xl z-10 shrink-0 ${isNavigating ? 'hidden lg:flex' : ''}`}>
         
         {/* Header */}
         <div className="p-4 bg-primary text-on-primary flex items-center justify-between shadow-md">
@@ -340,7 +342,7 @@ export default function App() {
       <div className="flex-grow bg-[#0f172a] relative overflow-hidden">
         
         {/* Floating Route Dashboard Card */}
-        {routeAlternatives && routeAlternatives.length > 0 && (
+        {routeAlternatives && routeAlternatives.length > 0 && !isNavigating && (
           <div className="absolute top-2 left-2 right-2 lg:top-4 lg:left-8 lg:right-auto z-10 bg-secondary/95 backdrop-blur-md border border-accent/50 p-3 lg:p-4 rounded-xl shadow-2xl lg:min-w-[320px] animate-in slide-in-from-top-2 fade-in duration-300 max-h-[45dvh] lg:max-h-[80dvh] flex flex-col">
             <h3 className="text-foreground font-bold mb-3 flex items-center space-x-2 shrink-0">
               <RouteIcon className="text-accent" size={18} />
@@ -372,10 +374,40 @@ export default function App() {
                         </div>
                       )}
                     </div>
+                    {isSelected && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setIsNavigating(true); }}
+                        className="w-full mt-3 bg-accent hover:bg-accent/90 text-primary font-bold py-2 rounded-lg flex items-center justify-center space-x-2 transition-transform active:scale-95"
+                      >
+                        <Navigation size={16} />
+                        <span>Start Navigation</span>
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Active Navigation Header */}
+        {isNavigating && currentRoute && (
+          <div className="absolute top-4 left-4 right-4 lg:left-8 lg:right-auto z-10 bg-primary/95 backdrop-blur-md text-on-primary border border-accent/30 p-4 rounded-xl shadow-2xl flex flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
+            <div className="flex items-center space-x-3">
+              <div className="bg-accent/20 p-2 rounded-full shrink-0">
+                <Navigation className="text-accent" size={20} />
+              </div>
+              <div className="flex flex-col">
+                <div className="font-bold text-base leading-tight">Navigating</div>
+                <div className="text-xs opacity-80">{parseDuration(currentRoute.duration)} • {parseDistance(currentRoute.distanceMeters)}</div>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsNavigating(false)}
+              className="px-4 py-2 bg-destructive/90 hover:bg-destructive text-white rounded-lg font-bold text-xs transition-colors shrink-0"
+            >
+              Exit
+            </button>
           </div>
         )}
 
